@@ -30,7 +30,7 @@ The workbook contains four main sheets:
 
 # 1. VaR
 
-The **VaR** sheet contains approximately **250 trading days of historical returns** for EURUSD, XAUUSD, XAGUSD, USDJPY, S&P 500 and NASDAQ.
+The **VaR** sheet contains **250 trading days of historical returns** for EURUSD, XAUUSD, XAGUSD, USDJPY, S&P 500 and NASDAQ.
 
 Portfolio returns are calculated using the assumed portfolio weights.
 
