@@ -19,12 +19,13 @@ The portfolio contains six instruments:
 * S&P 500
 * NASDAQ
 
-The workbook contains four main sheets:
+The workbook contains five main sheets:
 
 1. **VaR** – Historical, Parametric and Monte Carlo VaR/CVaR, holding-period sensitivity and rolling risk
-2. **Stress** – Multi-asset stress-testing scenarios
-3. **Correlation** – Correlation analysis across instruments
-4. **Scenarios** – ATR-based scenario analysis with long/short exposures and interactive case selection
+2. **EWMA Volatility** – Exponentially weighted volatility forecasting using λ = 0.94 and λ = 0.97
+3. **Stress** – Multi-asset stress-testing scenarios
+4. **Correlation** – Correlation analysis across instruments
+5. **Scenarios** – ATR-based scenario analysis with long/short exposures and interactive case selection
 
 ---
 
@@ -155,7 +156,302 @@ This helps illustrate how measured portfolio tail risk can change over time.
 
 ---
 
-# 2. Stress Testing
+# 2. EWMA Volatility
+<br>
+
+The **EWMA Volatility** sheet estimates portfolio volatility using the **Exponentially Weighted Moving Average (EWMA)** methodology.
+<br>
+
+Unlike traditional historical volatility calculations, which assign equal importance to all observations, EWMA places a greater weight on recent portfolio returns and progressively less weight on older observations.
+<br>
+
+This allows the volatility estimate to adjust dynamically as market conditions change.
+<br>
+
+The analysis is performed using the portfolio return series generated in the VaR sheet.
+<br>
+
+Two separate EWMA models are included:
+<br>
+
+* **EWMA (λ = 0.94)**
+* **EWMA (λ = 0.97)**
+<br>
+
+This allows a comparison between a more responsive volatility estimate and a smoother, slower-moving estimate.
+<br>
+
+---
+<br>
+
+## Portfolio Return Input
+<br>
+
+The model uses the daily portfolio returns calculated from the weighted instrument exposures.
+<br>
+
+These returns are used to estimate and update portfolio variance through time.
+<br>
+
+The methodology assumes that recent market movements are more relevant for estimating current risk than older observations.
+<br>
+
+---
+<br>
+
+## EWMA Variance Calculation
+<br>
+
+Two EWMA variance series are calculated:
+<br>
+
+* **Variance (λ = 0.94)**
+* **Variance (λ = 0.97)**
+<br>
+
+For initialization purposes, both variance series begin with an assumed starting variance of:
+<br>
+
+```text
+0.0001
+```
+
+<br>
+
+The variance estimate is then updated recursively each trading day.
+<br>
+
+### Variance (λ = 0.94)
+<br>
+
+```text
+Variance(t) = 0.06 × Return(t)^2 + 0.94 × Variance(t−1)
+```
+
+<br>
+
+### Variance (λ = 0.97)
+<br>
+
+```text
+Variance(t) = 0.03 × Return(t)^2 + 0.97 × Variance(t−1)
+```
+
+<br>
+
+where:
+<br>
+
+* `Return(t)^2` is the squared portfolio return for the current day
+* `Variance(t−1)` is the previous day's variance estimate
+* `λ` is the decay factor
+<br>
+
+The calculation combines new market information from the most recent portfolio return with the previously estimated variance, creating a continuously updated measure of portfolio risk.
+<br>
+
+---
+<br>
+
+## Annualized EWMA Volatility
+<br>
+
+The variance estimates are converted into annualized volatility using:
+<br>
+
+```text
+Volatility = √(Variance × 250)
+```
+
+<br>
+
+where:
+<br>
+
+* 250 represents the approximate number of trading days in a year
+* The square root converts variance into volatility (standard deviation)
+<br>
+
+The resulting value represents the portfolio's estimated annualized volatility.
+<br>
+
+For example:
+<br>
+
+```text
+EWMA Volatility = 15%
+```
+
+<br>
+
+would indicate that, based on recent portfolio behaviour, the portfolio is currently experiencing annualized volatility of approximately 15%.
+<br>
+
+---
+<br>
+
+## Understanding the Lambda Parameter
+<br>
+
+The lambda parameter determines how quickly the EWMA model reacts to new market information.
+<br>
+
+### λ = 0.94
+<br>
+
+Characteristics:
+<br>
+
+* Places greater emphasis on recent returns
+* Reacts more quickly to volatility spikes
+* Produces a more responsive volatility estimate
+* Commonly associated with the RiskMetrics methodology
+<br>
+
+### λ = 0.97
+<br>
+
+Characteristics:
+<br>
+
+* Places greater emphasis on historical observations
+* Produces a smoother volatility profile
+* Responds more slowly to sudden market events
+* Less sensitive to short-term market noise
+<br>
+
+Comparing both estimates demonstrates how different assumptions about volatility persistence can influence measured portfolio risk.
+<br>
+
+---
+<br>
+
+## What EWMA Volatility Shows
+<br>
+
+EWMA volatility provides a dynamic estimate of the portfolio's current risk level.
+<br>
+
+Periods of large portfolio returns, whether positive or negative, increase the variance estimate and therefore increase the calculated volatility.
+<br>
+
+Periods of relatively stable returns cause the variance estimate to decline gradually over time.
+<br>
+
+Because recent observations receive greater weighting than older observations, EWMA volatility can react more quickly to changing market conditions than traditional equal-weight historical volatility measures.
+<br>
+
+---
+<br>
+
+## Volatility Clustering
+<br>
+
+EWMA is based on the observation that financial markets often exhibit **volatility clustering**.
+<br>
+
+This means:
+<br>
+
+```text
+High volatility tends to follow high volatility
+Low volatility tends to follow low volatility
+```
+
+<br>
+
+By assigning larger weights to recent observations, EWMA attempts to capture changing volatility regimes and provide a more realistic estimate of current market risk.
+<br>
+
+---
+<br>
+
+## Practical Applications
+<br>
+
+EWMA volatility is widely used in trading and risk-management environments.
+<br>
+
+Common applications include:
+<br>
+
+* Volatility forecasting
+* Value at Risk (VaR) modelling
+* Portfolio risk monitoring
+* Position sizing
+* Leverage management
+* Margin calculations
+* Market risk reporting
+<br>
+
+Because the methodology is computationally efficient while remaining responsive to market conditions, it remains one of the most widely used volatility-estimation techniques in financial risk management.
+<br>
+
+---
+<br>
+
+## Interpretation
+<br>
+
+Higher EWMA volatility generally indicates:
+<br>
+
+* Greater market uncertainty
+* Larger expected portfolio fluctuations
+* Increased portfolio risk
+<br>
+
+Lower EWMA volatility generally indicates:
+<br>
+
+* More stable market conditions
+* Smaller expected price fluctuations
+* Reduced portfolio risk
+<br>
+
+A sharp increase in EWMA volatility may indicate that market conditions have become more turbulent, while declining volatility may suggest a return to more stable trading conditions.
+<br>
+
+---
+<br>
+
+## Key Assumptions & Limitations
+<br>
+
+### Historical Information
+<br>
+
+The model relies entirely on historical portfolio returns and does not incorporate forward-looking market expectations.
+<br>
+
+### Decay Factor Sensitivity
+<br>
+
+Results can vary depending on the chosen lambda value. Smaller lambda values react more quickly to market changes, while larger lambda values produce smoother volatility estimates.
+<br>
+
+### No Mean Reversion Model
+<br>
+
+The methodology does not explicitly model long-term average volatility or mean-reverting behaviour.
+<br>
+
+### Volatility, Not Direction
+<br>
+
+EWMA estimates the magnitude of expected portfolio fluctuations but does not predict whether future returns will be positive or negative.
+<br>
+
+### Initial Variance Assumption
+<br>
+
+The model requires an initial variance estimate to begin the recursive calculation. The influence of this starting value diminishes as additional observations are incorporated into the series.
+<br>
+
+---
+<br>
+
+# 3. Stress Testing
 
 The **Stress** sheet evaluates the portfolio under predefined market shock scenarios.
 
@@ -189,7 +485,7 @@ The resulting portfolio P&L is then calculated from the scenario assumptions.
 
 ---
 
-# 3. Correlation
+# 4. Correlation
 
 The **Correlation** sheet contains a correlation matrix showing the historical relationship between the portfolio instruments.
 
@@ -209,7 +505,7 @@ This can help highlight potential diversification effects as well as concentrati
 
 ---
 
-# 4. Scenario Analysis
+# 5. Scenario Analysis
 
 The **Scenarios** sheet uses a different portfolio composition for demonstration purposes:
 
@@ -320,6 +616,7 @@ This creates a simple interactive framework for exploring how different combinat
 | Historical VaR & CVaR      | Historical percentile of portfolio returns         |
 | Parametric VaR & CVaR      | Mean / standard deviation with normal distribution |
 | Monte Carlo VaR & CVaR     | Simulated return distribution                      |
+| EWMA Volatility            | Exponentially weighted variance forecast           |
 | Holding-period sensitivity | Square-root-of-time scaling                        |
 | Rolling risk               | 60-day Historical VaR & CVaR                       |
 | Stress testing             | Predefined and custom market shocks                |
